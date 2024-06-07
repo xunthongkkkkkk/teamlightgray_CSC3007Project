@@ -4,8 +4,8 @@ author: "Team Lightgray"
 format: html
 knitr:
   opts_chunk:
-    fig.width: 7.5
-    fig.height: 5
+    fig.width: 12
+    fig.height: 8
     fig.align: center
 ---
 
@@ -13,11 +13,12 @@ knitr:
 
 Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
 
-
 ## Running Code
+
 ## Code Generated from chatgpt
 
 # Load libraries
+
 ```{r}
 library(ggplot2)
 library(dplyr)
@@ -25,43 +26,58 @@ library(readr)
 library(patchwork)
 library(ggrepel)
 library(scales)
+library(tidyr)
+library(forcats)
 ```
 
 # Load data
+
 ```{r}
 # Load the data from the local file
 data <- read_csv("IIB Data Breaches - LATEST - breaches.csv")
 
 # Display the first few rows to check the structure
 head(data)
-
-
 ```
 
 # Data preparation
+
 ```{r}
 # Convert `records lost` to numeric, handling non-numeric values
 data <- data %>%
   mutate(`records lost` = as.numeric(gsub("[^0-9]", "", `records lost`)),
-         year = as.numeric(year))
+         year = as.numeric(year)) %>%
+  drop_na(`records lost`, year)  # Drop rows with missing values in critical columns
 
-# Add categories
+# Add main categories
 data <- data %>%
   mutate(
     Category = case_when(
       grepl("Facebook|Twitter|Microsoft|LinkedIn", organisation) ~ "Tech",
-      grepl("Health", organisation, ignore.case = TRUE) ~ "Healthcare",
-      grepl("Finance|Bank", organisation, ignore.case = TRUE) ~ "Financial",
-      TRUE ~ "Other"
+      grepl("Health|Medical|Hospital", organisation, ignore.case = TRUE) ~ "Healthcare",
+      grepl("Finance|Bank|Credit", organisation, ignore.case = TRUE) ~ "Financial",
+      grepl("Government|Police|Military|Federal", organisation, ignore.case = TRUE) ~ "Government",
+      grepl("Education|University|School|Academy", organisation, ignore.case = TRUE) ~ "Education",
+      grepl("Retail|Shop|Market|Store", organisation, ignore.case = TRUE) ~ "Retail",
+      grepl("Transport|Airline|Railway|Train|Bus|Vehicle", organisation, ignore.case = TRUE) ~ "Transport",
+      grepl("Insurance|Insurer", organisation, ignore.case = TRUE) ~ "Insurance",
+      grepl("Entertainment|Media", organisation, ignore.case = TRUE) ~ "Entertainment",
+      TRUE ~ "Miscellaneous"
     )
   )
+
+# Ensure no NA values in the dataset
+data <- data %>%
+  filter(!is.na(`records lost`) & !is.na(year) & !is.na(Category))
 
 # Display the first few rows to verify the new columns
 head(data)
 
+
 ```
 
 # Filter and Aggregate Data
+
 ```{r}
 # Define a threshold for major breaches (e.g., 100 million records)
 threshold <- 100000000
@@ -84,33 +100,53 @@ head(combined_data)
 
 ```
 
-
 # Create improved visualization
+
 ```{r}
-# Define a distinct color palette
-color_palette <- c("Tech" = "#1f78b4", "Healthcare" = "#33a02c", "Financial" = "#e31a1c", "Other" = "#6a3d9a")
+# Define a distinct color palette for categories
+color_palette <- c(
+  "Tech" = "#1f78b4",
+  "Healthcare" = "#33a02c",
+  "Financial" = "#e31a1c",
+  "Government" = "#ff7f00",
+  "Education" = "#6a3d9a",
+  "Retail" = "#ffcc33",
+  "Transport" = "#a6cee3",
+  "Insurance" = "#fb9a99",
+  "Entertainment" = "#b15928",
+  "Miscellaneous" = "#d9d9d9"
+)
+
+# Calculate radius for bubbles
+combined_data <- combined_data %>%
+  mutate(radius = sqrt(`records lost` / pi) / 1e6)
 
 # Improved Bubble Chart with Enhanced Aesthetics and Size Legend Formatting
 improved_plot <- ggplot(combined_data, aes(x = year, y = `records lost`, size = `records lost`, fill = Category, label = organisation)) +
-  geom_jitter(shape = 21, color = "black", alpha = 0.6, width = 0.15, height = 0) +  # Adds points with specified shape, color, transparency, and jittering to reduce overlap
-  geom_text_repel(aes(label = ifelse(`records lost` >= threshold, organisation, "")), size = 3, show.legend = FALSE) +  # Adds text labels without overlapping
-  scale_size_area(max_size = 20, breaks = c(2.5e+08, 5e+08, 7.5e+08, 1e+09), labels = c("250M", "500M", "750M", "1B")) +  # Customizes size legend
-  scale_x_continuous(breaks = seq(2004, 2024, 2), labels = as.character(seq(2004, 2024, 2)), limits = c(2004, 2024)) +  # Customizes x-axis with limits
-  scale_y_continuous(labels = scales::comma, limits = c(0, 1.1e+09)) +  # Customizes y-axis with limits
-  scale_fill_manual(values = color_palette) +  # Apply custom color palette
-  theme_minimal() +  # Applies a minimal theme
+  geom_jitter(shape = 21, color = "black", alpha = 0.6, width = 0.3, height = 0.3) +
+  geom_text_repel(aes(label = ifelse(`records lost` >= threshold, organisation, "")), size = 3, show.legend = FALSE) +
+  scale_size(range = c(2, 10), breaks = c(1e8, 2e8, 3e8, 4e8), labels = c("100M", "200M", "300M", "400M")) +
+  scale_x_continuous(breaks = seq(2004, 2024, 2), labels = as.character(seq(2004, 2024, 2)), limits = c(2004, 2024)) +
+  scale_y_continuous(labels = scales::comma, limits = c(0, 4e+08), breaks = seq(0, 4e+08, 1e+08)) +
+  scale_fill_manual(values = color_palette) +
+  guides(
+    fill = guide_legend(ncol = 1, byrow = TRUE, title.position = "top", keyheight = unit(0.5, 'lines')),
+    size = guide_legend(ncol = 1, byrow = TRUE, title.position = "top", keyheight = unit(0.5, 'lines'))
+  ) +
+  theme_minimal() +
   theme(
-    axis.title.x = element_text(size = 14, face = "bold"),  # Customizes x-axis title
-    axis.title.y = element_text(size = 14, face = "bold"),  # Customizes y-axis title
-    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotates x-axis text for readability
-    axis.text.y = element_text(size = 12),  # Customizes y-axis text
-    legend.position = "right",  # Positions legend on the right
-    legend.title = element_text(size = 12),  # Customizes legend title
-    legend.text = element_text(size = 10),  # Customizes legend text
-    plot.title = element_text(size = 16, face = "bold"),  # Customizes plot title
-    plot.subtitle = element_text(size = 12, face = "italic"),  # Customizes plot subtitle
-    panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "grey80"),  # Customizes major grid lines
-    panel.grid.minor = element_line(size = 0.25, linetype = 'solid', colour = "grey90")  # Customizes minor grid lines
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12),
+    legend.position = "right",
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 8),
+    legend.key.size = unit(0.3, 'lines'),
+    plot.title = element_text(size = 16, face = "bold"),
+    plot.subtitle = element_text(size = 12, face = "italic"),
+    panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "grey80"),
+    panel.grid.minor = element_line(size = 0.25, linetype = 'solid', colour = "grey90")
   ) +
   labs(title = "World's Biggest Data Breaches and Hacks",
        subtitle = "From 2004 to 2024",
@@ -124,4 +160,3 @@ improved_plot <- ggplot(combined_data, aes(x = year, y = `records lost`, size = 
 print(improved_plot)
 
 ```
-
