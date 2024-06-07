@@ -1,0 +1,127 @@
+---
+title: "TeamLightGray_CSC3007Project"
+author: "Team Lightgray"
+format: html
+knitr:
+  opts_chunk:
+    fig.width: 7.5
+    fig.height: 5
+    fig.align: center
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+
+## Running Code
+## Code Generated from chatgpt
+
+# Load libraries
+```{r}
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(patchwork)
+library(ggrepel)
+library(scales)
+```
+
+# Load data
+```{r}
+# Load the data from the local file
+data <- read_csv("IIB Data Breaches - LATEST - breaches.csv")
+
+# Display the first few rows to check the structure
+head(data)
+
+
+```
+
+# Data preparation
+```{r}
+# Convert `records lost` to numeric, handling non-numeric values
+data <- data %>%
+  mutate(`records lost` = as.numeric(gsub("[^0-9]", "", `records lost`)),
+         year = as.numeric(year))
+
+# Add categories
+data <- data %>%
+  mutate(
+    Category = case_when(
+      grepl("Facebook|Twitter|Microsoft|LinkedIn", organisation) ~ "Tech",
+      grepl("Health", organisation, ignore.case = TRUE) ~ "Healthcare",
+      grepl("Finance|Bank", organisation, ignore.case = TRUE) ~ "Financial",
+      TRUE ~ "Other"
+    )
+  )
+
+# Display the first few rows to verify the new columns
+head(data)
+
+```
+
+# Filter and Aggregate Data
+```{r}
+# Define a threshold for major breaches (e.g., 100 million records)
+threshold <- 100000000
+
+# Separate major and minor breaches
+major_breaches <- data %>% filter(`records lost` >= threshold)
+minor_breaches <- data %>% filter(`records lost` < threshold)
+
+# Aggregate minor breaches by category and year
+minor_breaches_aggregated <- minor_breaches %>%
+  group_by(Category, year) %>%
+  summarize(`records lost` = sum(`records lost`), .groups = 'drop') %>%
+  mutate(organisation = "Other")
+
+# Combine major breaches and aggregated minor breaches
+combined_data <- bind_rows(major_breaches, minor_breaches_aggregated)
+
+# Display the combined data
+head(combined_data)
+
+```
+
+
+# Create improved visualization
+```{r}
+# Define a distinct color palette
+color_palette <- c("Tech" = "#1f78b4", "Healthcare" = "#33a02c", "Financial" = "#e31a1c", "Other" = "#6a3d9a")
+
+# Improved Bubble Chart with Enhanced Aesthetics and Size Legend Formatting
+improved_plot <- ggplot(combined_data, aes(x = year, y = `records lost`, size = `records lost`, fill = Category, label = organisation)) +
+  geom_jitter(shape = 21, color = "black", alpha = 0.6, width = 0.15, height = 0) +  # Adds points with specified shape, color, transparency, and jittering to reduce overlap
+  geom_text_repel(aes(label = ifelse(`records lost` >= threshold, organisation, "")), size = 3, show.legend = FALSE) +  # Adds text labels without overlapping
+  scale_size_area(max_size = 20, breaks = c(2.5e+08, 5e+08, 7.5e+08, 1e+09), labels = c("250M", "500M", "750M", "1B")) +  # Customizes size legend
+  scale_x_continuous(breaks = seq(2004, 2024, 2), labels = as.character(seq(2004, 2024, 2)), limits = c(2004, 2024)) +  # Customizes x-axis with limits
+  scale_y_continuous(labels = scales::comma, limits = c(0, 1.1e+09)) +  # Customizes y-axis with limits
+  scale_fill_manual(values = color_palette) +  # Apply custom color palette
+  theme_minimal() +  # Applies a minimal theme
+  theme(
+    axis.title.x = element_text(size = 14, face = "bold"),  # Customizes x-axis title
+    axis.title.y = element_text(size = 14, face = "bold"),  # Customizes y-axis title
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotates x-axis text for readability
+    axis.text.y = element_text(size = 12),  # Customizes y-axis text
+    legend.position = "right",  # Positions legend on the right
+    legend.title = element_text(size = 12),  # Customizes legend title
+    legend.text = element_text(size = 10),  # Customizes legend text
+    plot.title = element_text(size = 16, face = "bold"),  # Customizes plot title
+    plot.subtitle = element_text(size = 12, face = "italic"),  # Customizes plot subtitle
+    panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "grey80"),  # Customizes major grid lines
+    panel.grid.minor = element_line(size = 0.25, linetype = 'solid', colour = "grey90")  # Customizes minor grid lines
+  ) +
+  labs(title = "World's Biggest Data Breaches and Hacks",
+       subtitle = "From 2004 to 2024",
+       x = "Year",
+       y = "Number of Records Breached",
+       size = "Records Breached",
+       fill = "Category",
+       caption = "Source: Information Is Beautiful")
+
+# Display the improved plot
+print(improved_plot)
+
+```
+
