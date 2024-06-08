@@ -100,6 +100,14 @@ head(combined_data)
 
 ```
 
+## When we finalize the visualisation need to save the combined data to new Excel
+# Save cleaned data to csv file
+```{r}
+
+```
+
+## From here onwards when we finalize improved visualisation will move to Poster.qmd
+
 # Create improved visualization
 
 ```{r}
