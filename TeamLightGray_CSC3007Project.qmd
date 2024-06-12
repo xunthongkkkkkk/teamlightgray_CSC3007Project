@@ -13,11 +13,11 @@ knitr:
 
 Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
 
-## Running Code
+# Running Code
 
-## Code Generated from chatgpt
+# Data preparation
 
-# Load libraries
+## Load Necessary Libraries
 
 ```{r}
 library(ggplot2)
@@ -30,7 +30,7 @@ library(tidyr)
 library(forcats)
 ```
 
-# Load data
+## Load Data
 
 ```{r}
 # Load the data from the local file
@@ -40,107 +40,245 @@ data <- read_csv("IIB Data Breaches - LATEST - breaches.csv")
 head(data)
 ```
 
-# Data preparation
+## Check for NA Values Before Handling
+
+```{r}
+# Check for NA values in each column
+sum(is.na(data$sector))
+sum(is.na(data$year))
+sum(is.na(data$`records lost`))
+```
+
+## Group Sectors and Check Data
+
+```{r}
+# Need to decide whether we are using Sector to categorize the data
+
+# Display the unique sectors before grouping
+unique_sectors <- unique(data$sector)
+unique_sectors
+
+# Group sectors into broader categories
+data <- data %>%
+  mutate(
+    sector_group = case_when(
+      grepl("web", sector, ignore.case = TRUE) ~ "Web",
+      grepl("healthcare|health", sector, ignore.case = TRUE) ~ "Healthcare",
+      grepl("app", sector, ignore.case = TRUE) ~ "App",
+      grepl("retail", sector, ignore.case = TRUE) ~ "Retail",
+      grepl("gaming", sector, ignore.case = TRUE) ~ "Gaming",
+      grepl("transport", sector, ignore.case = TRUE) ~ "Transport",
+      grepl("financial|finance", sector, ignore.case = TRUE) ~ "Financial",
+      grepl("tech", sector, ignore.case = TRUE) ~ "Tech",
+      grepl("government", sector, ignore.case = TRUE) ~ "Government",
+      grepl("telecoms", sector, ignore.case = TRUE) ~ "Telecoms",
+      grepl("legal", sector, ignore.case = TRUE) ~ "Legal",
+      grepl("media", sector, ignore.case = TRUE) ~ "Media",
+      grepl("academic", sector, ignore.case = TRUE) ~ "Academic",
+      grepl("energy", sector, ignore.case = TRUE) ~ "Energy",
+      grepl("military", sector, ignore.case = TRUE) ~ "Military",
+      TRUE ~ "Miscellaneous"
+    )
+  )
+
+# Should we decide what can some sector group combine to a big group? E.g. Goverment and Military -\> Government?
+
+# Display the unique sector groups after grouping
+unique(data$sector_group)
+
+```
+
+## Check for NA Values After Handling
+
+```{r}
+# Check for NA values in the new column
+sum(is.na(data$sector_group))
+```
+
+## Handle Empty Records
 
 ```{r}
 # Convert `records lost` to numeric, handling non-numeric values
 data <- data %>%
   mutate(`records lost` = as.numeric(gsub("[^0-9]", "", `records lost`)),
          year = as.numeric(year)) %>%
-  drop_na(`records lost`, year)  # Drop rows with missing values in critical columns
+  drop_na(`records lost`, year, sector_group)  # Drop rows with missing values in critical columns
 
-# Add main categories
+# Check for any NAs introduced by coercion
+sum(is.na(data$`records lost`))
+sum(is.na(data$year))
+
+# Drop rows with missing values in critical columns
 data <- data %>%
-  mutate(
-    Category = case_when(
-      grepl("Facebook|Twitter|Microsoft|LinkedIn", organisation) ~ "Tech",
-      grepl("Health|Medical|Hospital", organisation, ignore.case = TRUE) ~ "Healthcare",
-      grepl("Finance|Bank|Credit", organisation, ignore.case = TRUE) ~ "Financial",
-      grepl("Government|Police|Military|Federal", organisation, ignore.case = TRUE) ~ "Government",
-      grepl("Education|University|School|Academy", organisation, ignore.case = TRUE) ~ "Education",
-      grepl("Retail|Shop|Market|Store", organisation, ignore.case = TRUE) ~ "Retail",
-      grepl("Transport|Airline|Railway|Train|Bus|Vehicle", organisation, ignore.case = TRUE) ~ "Transport",
-      grepl("Insurance|Insurer", organisation, ignore.case = TRUE) ~ "Insurance",
-      grepl("Entertainment|Media", organisation, ignore.case = TRUE) ~ "Entertainment",
-      TRUE ~ "Miscellaneous"
-    )
-  )
+  drop_na(`records lost`, year, sector_group)
 
 # Ensure no NA values in the dataset
+sum(is.na(data$`records lost`))
+sum(is.na(data$year))
+sum(is.na(data$sector_group))
+
+# Display the first few rows to verify the new columns
+head(data)
+```
+
+## Check for Duplicates Before Handling
+
+```{r}
+# Check for duplicate records
+duplicated_rows <- data %>%
+  group_by(organisation, sector_group, year) %>%
+  filter(n() > 1)
+nrow(duplicated_rows)
+
+```
+
+## Handle Duplicates
+
+```{r}
+# Handle duplicate records by combining them
 data <- data %>%
-  filter(!is.na(`records lost`) & !is.na(year) & !is.na(Category))
+  group_by(organisation, sector_group, year) %>%
+  summarize(`records lost` = sum(`records lost`), .groups = 'drop')
+
+# Check for duplicates after handling
+duplicated_rows_after <- data %>%
+  group_by(organisation, sector_group, year) %>%
+  filter(n() > 1)
+nrow(duplicated_rows_after)
 
 # Display the first few rows to verify the new columns
 head(data)
 
-
 ```
 
-# Filter and Aggregate Data
+## Filter and Aggregate Data
 
 ```{r}
+# Do we still need this step after combining duplicate records within each sector group and year??
+
 # Define a threshold for major breaches (e.g., 100 million records)
-threshold <- 100000000
+#threshold <- 100000000
 
 # Separate major and minor breaches
-major_breaches <- data %>% filter(`records lost` >= threshold)
-minor_breaches <- data %>% filter(`records lost` < threshold)
+#major_breaches <- data %>% filter(`records lost` >= threshold)
+#minor_breaches <- data %>% filter(`records lost` < threshold)
 
-# Aggregate minor breaches by category and year
-minor_breaches_aggregated <- minor_breaches %>%
-  group_by(Category, year) %>%
-  summarize(`records lost` = sum(`records lost`), .groups = 'drop') %>%
-  mutate(organisation = "Other")
+# Aggregate minor breaches by sector and year
+#minor_breaches_aggregated <- minor_breaches %>%
+#  group_by(sector, year) %>%
+#  summarize(`records lost` = sum(`records lost`), .groups = 'drop') %>%
+#  mutate(organisation = "Other")
 
 # Combine major breaches and aggregated minor breaches
-combined_data <- bind_rows(major_breaches, minor_breaches_aggregated)
+#combined_data <- bind_rows(major_breaches, minor_breaches_aggregated)
 
 # Display the combined data
-head(combined_data)
+#head(combined_data)
 
 ```
 
-## When we finalize the visualisation need to save the combined data to new Excel
-# Save cleaned data to csv file
+## Save cleaned data to csv file
+
 ```{r}
+# When we finalize the visualisation need to save the combined data to new Excel
 
 ```
 
-## From here onwards when we finalize improved visualisation will move to Poster.qmd
+# From here onwards when we finalize improved visualisation will move to Poster.qmd
 
-# Create improved visualization
+# Data Visualisation
+
+## Define Color Palette and Verify Data Range
 
 ```{r}
-# Define a distinct color palette for categories
+# Define a distinct color palette for sectors
 color_palette <- c(
-  "Tech" = "#1f78b4",
+  "Web" = "#1f78b4",
   "Healthcare" = "#33a02c",
-  "Financial" = "#e31a1c",
-  "Government" = "#ff7f00",
-  "Education" = "#6a3d9a",
+  "App" = "#e31a1c",
   "Retail" = "#ffcc33",
+  "Gaming" = "#b2df8a",
   "Transport" = "#a6cee3",
-  "Insurance" = "#fb9a99",
-  "Entertainment" = "#b15928",
-  "Miscellaneous" = "#d9d9d9"
+  "Financial" = "#fb9a99",
+  "Tech" = "#ff7f00",
+  "Government" = "#6a3d9a",
+  "Telecoms" = "#cab2d6",
+  "Legal" = "#ffff99",
+  "Media" = "#fdbf6f",
+  "Academic" = "#b15928",
+  "Energy" = "#ff99c8",
+  "Military" = "#a1dab4",
+  "Miscellaneous" = "#999999"
 )
 
-# Calculate radius for bubbles
-combined_data <- combined_data %>%
-  mutate(radius = sqrt(`records lost` / pi) / 1e6)
+# Verify the data range and ensure it's within plotting limits
+summary(data)
+```
 
-# Improved Bubble Chart with Enhanced Aesthetics and Size Legend Formatting
-improved_plot <- ggplot(combined_data, aes(x = year, y = `records lost`, size = `records lost`, fill = Category, label = organisation)) +
-  geom_jitter(shape = 21, color = "black", alpha = 0.6, width = 0.3, height = 0.3) +
-  geom_text_repel(aes(label = ifelse(`records lost` >= threshold, organisation, "")), size = 3, show.legend = FALSE) +
-  scale_size(range = c(2, 10), breaks = c(1e8, 2e8, 3e8, 4e8), labels = c("100M", "200M", "300M", "400M")) +
+## Base Plot
+
+```{r}
+# Create base plot
+base_plot <- ggplot(data, aes(x = year, y = `records lost`, size = `records lost`, fill = sector_group)) +
+  geom_jitter(shape = 21, color = "black", alpha = 0.6, width = 0.2, height = 0.2)
+
+# Display the base plot
+print(base_plot)
+```
+
+## Add Size Scale
+
+```{r}
+# Add size scale to the plot
+plot_with_size <- base_plot +
+  scale_size_area(max_size = 20, breaks = c(100000000, 200000000, 300000000, 400000000), labels = c("100M", "200M", "300M", "400M"))
+
+# Display the plot with size scale
+print(plot_with_size)
+```
+
+## Add X and Y Scales
+
+```{r}
+# Add x and y scales to the plot
+plot_with_scales <- plot_with_size +
   scale_x_continuous(breaks = seq(2004, 2024, 2), labels = as.character(seq(2004, 2024, 2)), limits = c(2004, 2024)) +
-  scale_y_continuous(labels = scales::comma, limits = c(0, 4e+08), breaks = seq(0, 4e+08, 1e+08)) +
-  scale_fill_manual(values = color_palette) +
+  scale_y_continuous(labels = scales::comma, limits = c(0, 400000000))
+
+# Display the plot with x and y scales
+print(plot_with_scales)
+```
+
+## Add Fill Scale
+
+```{r}
+# Add fill scale to the plot
+plot_with_fill <- plot_with_scales +
+  scale_fill_manual(values = color_palette)
+
+# Display the plot with fill scale
+print(plot_with_fill)
+```
+
+## Add Guides
+
+```{r}
+# Add guides to the plot
+plot_with_guides <- plot_with_fill +
   guides(
     fill = guide_legend(ncol = 1, byrow = TRUE, title.position = "top", keyheight = unit(0.5, 'lines')),
     size = guide_legend(ncol = 1, byrow = TRUE, title.position = "top", keyheight = unit(0.5, 'lines'))
-  ) +
+  )
+
+# Display the plot with guides
+print(plot_with_guides)
+```
+
+## Customize Theme
+
+```{r}
+# Customize the theme of the plot
+plot_with_theme <- plot_with_guides +
   theme_minimal() +
   theme(
     axis.title.x = element_text(size = 14, face = "bold"),
@@ -155,16 +293,37 @@ improved_plot <- ggplot(combined_data, aes(x = year, y = `records lost`, size = 
     plot.subtitle = element_text(size = 12, face = "italic"),
     panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "grey80"),
     panel.grid.minor = element_line(size = 0.25, linetype = 'solid', colour = "grey90")
-  ) +
+  )
+
+# Display the plot with customized theme
+print(plot_with_theme)
+```
+
+## Add Labels and Title
+
+```{r}
+# Add labels and title to the plot
+final_plot <- plot_with_theme +
   labs(title = "World's Biggest Data Breaches and Hacks",
        subtitle = "From 2004 to 2024",
        x = "Year",
        y = "Number of Records Breached",
        size = "Records Breached",
-       fill = "Category",
+       fill = "Sector",
        caption = "Source: Information Is Beautiful")
 
-# Display the improved plot
-print(improved_plot)
+# Add text labels to the plot
+final_plot_with_labels <- final_plot +
+  geom_text_repel(aes(label = ifelse(`records lost` >= 100000000, organisation, "")), size = 3, show.legend = FALSE)
+
+# Display the final plot with labels
+print(final_plot_with_labels)
+```
+
+## Debug Output
+
+```{r}
+# Check the data summary for any anomalies
+summary(data)
 
 ```
