@@ -2,9 +2,15 @@
 title: "testing_sheet2"
 author: "sy"
 format: html
+knitr:
+  opts_chunk:
+    fig.width: 12
+    fig.height: 10
+    fig.align: center
 ---
 
 ```{r}
+# Load required libraries
 library(ggplot2)
 library(dplyr)
 library(ggrepel)
@@ -13,9 +19,12 @@ library(tidyverse)
 
 # Read the data
 data <- read.csv("IIB Data Breaches - LATEST - breaches.csv")
-sum(is.na(data$sector))
-sum(is.na(data$year))
-sum(is.na(data$`records lost`))
+
+# Check for any NA values in important columns
+print(sum(is.na(data$sector)))
+print(sum(is.na(data$year)))
+print(sum(is.na(data$records.lost)))
+
 # Group sectors into broader categories
 data <- data %>%
   mutate(
@@ -38,48 +47,80 @@ data <- data %>%
       TRUE ~ "Miscellaneous"
     )
   )
-unique(data$sector_group)
+
 # Convert `records lost` to numeric, handling non-numeric values
 data <- data %>%
-  mutate(`records lost` = as.numeric(gsub("[^0-9]", "", records.lost)),
+  mutate(records.lost = as.numeric(gsub("[^0-9]", "", records.lost)),
          year = as.numeric(year)) %>%
-  drop_na(`records lost`, year, sector_group)  # Drop rows with missing values in critical columns
+  drop_na(records.lost, year, sector_group)  # Drop rows with missing values in critical columns
 
 # Filter the data based on the specified year range and minimum records lost
 start_year <- 2010
 end_year <- 2024
-min_records_lost <- 50000000
 
 data <- data %>%
-  filter(year >= start_year & year <= end_year & `records lost` >= min_records_lost)
+  filter(year >= start_year & year <= end_year)
 
 # Ensure no NA values in the dataset
 data <- data %>%
-  drop_na(`records lost`, year, sector_group)
+  drop_na(records.lost, year, sector_group)
+
+# Calculate total records lost for each sector group and select top 10 sectors
+top_sectors <- data %>%
+  group_by(sector_group) %>%
+  summarize(total_records_lost = sum(records.lost)) %>%
+  arrange(desc(total_records_lost)) %>%
+  top_n(10, wt = total_records_lost) %>%
+  pull(sector_group)
+
+# Print the top sectors to check the sorting
+print(top_sectors)
+
+# Filter the data to include only top 10 sectors
+data <- data %>%
+  filter(sector_group %in% top_sectors)
 
 # Convert the year to a date format for plotting
 data <- data %>%
   mutate(StartDate = as.Date(paste(year, "-01-01", sep = "")),
          EndDate = as.Date(paste(year, "-12-31", sep = "")))
 
-# Create the Gantt chart
-ggplot(data, aes(x = StartDate, y = reorder(sector_group, -`records lost`), color = sector_group)) +
-  geom_segment(aes(xend = EndDate, yend = sector_group, size = `records lost`)) +
-  geom_point(aes(size = `records lost`)) +
-  scale_size_continuous(range = c(2, 10)) +
+# Sort the sectors by total records lost
+sector_levels <- data %>%
+  group_by(sector_group) %>%
+  summarize(total_records_lost = sum(records.lost)) %>%
+  arrange(desc(total_records_lost)) %>%
+  pull(sector_group)
+
+data <- data %>%
+  mutate(sector_group = factor(sector_group, levels = rev(sector_levels)))
+
+# Create the Gantt chart with improved aesthetics and color
+gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group, color = sector_group)) +
+  geom_segment(aes(xend = EndDate, yend = sector_group, size = records.lost), show.legend = TRUE) +
+  geom_point(aes(size = records.lost), show.legend = TRUE) +
+  scale_size_continuous(range = c(2, 10), breaks = c(50000000, 100000000, 500000000, 1000000000), labels = c("50M", "100M", "500M", "1B")) +
   theme_minimal() +
   labs(
     title = "Data Breaches Timeline by Sector",
     x = "Year",
     y = "Sector",
-    size = "Records Breached",
-    color = "Sector"
+    size = "Records Breached"
   ) +
   theme(
-    plot.title = element_text(hjust = 0.5),
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "top"
-  )
+    axis.text.y = element_text(size = 12),
+    legend.position = "right",
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10),
+    plot.margin = margin(10, 10, 10, 10)
+  ) +
+  guides(color = FALSE) 
 
+# Print the plot
+print(gantt_plot)
 
 ```

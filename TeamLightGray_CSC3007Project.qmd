@@ -327,3 +327,99 @@ print(final_plot_with_labels)
 summary(data)
 
 ```
+## Gantt Chart
+```{r}
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(lubridate)
+library(scales)
+library(ggrepel)
+
+# Load the data from the local file
+data <- read_csv("IIB Data Breaches - LATEST - breaches.csv")
+
+# Display the first few rows to check the structure
+print(head(data))
+
+# Display the unique sectors
+unique_sectors <- unique(data$sector)
+print(unique_sectors)
+
+# Group sectors into broader categories
+data <- data %>%
+  mutate(
+    sector_group = case_when(
+      grepl("web", sector, ignore.case = TRUE) ~ "Web",
+      grepl("healthcare|health", sector, ignore.case = TRUE) ~ "Healthcare",
+      grepl("app", sector, ignore.case = TRUE) ~ "App",
+      grepl("retail", sector, ignore.case = TRUE) ~ "Retail",
+      grepl("gaming", sector, ignore.case = TRUE) ~ "Gaming",
+      grepl("transport", sector, ignore.case = TRUE) ~ "Transport",
+      grepl("financial|finance", sector, ignore.case = TRUE) ~ "Financial",
+      grepl("tech", sector, ignore.case = TRUE) ~ "Tech",
+      grepl("government", sector, ignore.case = TRUE) ~ "Government",
+      grepl("telecoms", sector, ignore.case = TRUE) ~ "Telecoms",
+      grepl("legal", sector, ignore.case = TRUE) ~ "Legal",
+      grepl("media", sector, ignore.case = TRUE) ~ "Media",
+      grepl("academic", sector, ignore.case = TRUE) ~ "Academic",
+      grepl("energy", sector, ignore.case = TRUE) ~ "Energy",
+      grepl("military", sector, ignore.case = TRUE) ~ "Military",
+      TRUE ~ "Miscellaneous"
+    )
+  )
+
+# Display the unique sector groups
+unique_sectors_grouped <- unique(data$sector_group)
+print(unique_sectors_grouped)
+
+# Convert `records lost` to numeric, handling non-numeric values
+data <- data %>%
+  mutate(`records lost` = as.numeric(gsub("[^0-9]", "", `records lost`)),
+         year = as.numeric(year)) %>%
+  drop_na(`records lost`, year, sector_group)  # Drop rows with missing values in critical columns
+
+# Ensure no NA values in the dataset
+data <- data %>%
+  filter(!is.na(`records lost`) & !is.na(year) & !is.na(sector_group))
+
+# Handle duplicate records by combining them
+data <- data %>%
+  group_by(sector_group, year) %>%
+  summarize(`records lost` = sum(`records lost`), .groups = 'drop')
+
+# Display the first few rows to verify the new columns
+print(head(data))
+
+# Filter to include only significant breaches (e.g., greater than 50 million records)
+filtered_data <- data %>%
+  filter(`records lost` > 50000000)
+
+# Verify the data range and ensure it's within plotting limits
+summary(filtered_data)
+
+# Base Gantt Chart
+base_plot <- ggplot(filtered_data, aes(x = year, y = reorder(sector_group, -`records lost`), color = sector_group)) +
+  geom_segment(aes(xend = year + 0.5, yend = sector_group, size = `records lost`)) +
+  geom_point(aes(size = `records lost`)) +
+  scale_size_continuous(range = c(2, 10)) +
+  theme_minimal() +
+  labs(
+    title = "Data Breaches Timeline",
+    x = "Year",
+    y = "Sector",
+    size = "Records Breached",
+    color = "Sector"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right"
+  )
+
+# Display the base plot
+print(base_plot)
+
+```
+
