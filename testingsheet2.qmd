@@ -1,0 +1,85 @@
+---
+title: "testing_sheet2"
+author: "sy"
+format: html
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(ggrepel)
+library(scales)
+library(tidyverse)
+
+# Read the data
+data <- read.csv("IIB Data Breaches - LATEST - breaches.csv")
+sum(is.na(data$sector))
+sum(is.na(data$year))
+sum(is.na(data$`records lost`))
+# Group sectors into broader categories
+data <- data %>%
+  mutate(
+    sector_group = case_when(
+      grepl("web", sector, ignore.case = TRUE) ~ "Web",
+      grepl("healthcare|health", sector, ignore.case = TRUE) ~ "Healthcare",
+      grepl("app", sector, ignore.case = TRUE) ~ "App",
+      grepl("retail", sector, ignore.case = TRUE) ~ "Retail",
+      grepl("gaming", sector, ignore.case = TRUE) ~ "Gaming",
+      grepl("transport", sector, ignore.case = TRUE) ~ "Transport",
+      grepl("financial|finance", sector, ignore.case = TRUE) ~ "Financial",
+      grepl("tech", sector, ignore.case = TRUE) ~ "Tech",
+      grepl("government", sector, ignore.case = TRUE) ~ "Government",
+      grepl("telecoms", sector, ignore.case = TRUE) ~ "Telecoms",
+      grepl("legal", sector, ignore.case = TRUE) ~ "Legal",
+      grepl("media", sector, ignore.case = TRUE) ~ "Media",
+      grepl("academic", sector, ignore.case = TRUE) ~ "Academic",
+      grepl("energy", sector, ignore.case = TRUE) ~ "Energy",
+      grepl("military", sector, ignore.case = TRUE) ~ "Military",
+      TRUE ~ "Miscellaneous"
+    )
+  )
+unique(data$sector_group)
+# Convert `records lost` to numeric, handling non-numeric values
+data <- data %>%
+  mutate(`records lost` = as.numeric(gsub("[^0-9]", "", records.lost)),
+         year = as.numeric(year)) %>%
+  drop_na(`records lost`, year, sector_group)  # Drop rows with missing values in critical columns
+
+# Filter the data based on the specified year range and minimum records lost
+start_year <- 2010
+end_year <- 2024
+min_records_lost <- 50000000
+
+data <- data %>%
+  filter(year >= start_year & year <= end_year & `records lost` >= min_records_lost)
+
+# Ensure no NA values in the dataset
+data <- data %>%
+  drop_na(`records lost`, year, sector_group)
+
+# Convert the year to a date format for plotting
+data <- data %>%
+  mutate(StartDate = as.Date(paste(year, "-01-01", sep = "")),
+         EndDate = as.Date(paste(year, "-12-31", sep = "")))
+
+# Create the Gantt chart
+ggplot(data, aes(x = StartDate, y = reorder(sector_group, -`records lost`), color = sector_group)) +
+  geom_segment(aes(xend = EndDate, yend = sector_group, size = `records lost`)) +
+  geom_point(aes(size = `records lost`)) +
+  scale_size_continuous(range = c(2, 10)) +
+  theme_minimal() +
+  labs(
+    title = "Data Breaches Timeline by Sector",
+    x = "Year",
+    y = "Sector",
+    size = "Records Breached",
+    color = "Sector"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top"
+  )
+
+
+```
