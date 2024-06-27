@@ -1,0 +1,212 @@
+---
+title: Visualising Top 10 Sectors affected by Data Breaches (2010--2024)
+author: "Team Lightgray"
+format: 
+  poster-typst: 
+    size: "33x23" # Approximately A1
+    poster-authors: "Team Lightgray"
+    departments: "Information and Communication Technologies"
+    institution-logo: "./images/sit-logo.png"
+    footer-text: "Information Visualization 2024"
+execute:
+  echo: false
+knitr:
+  opts_chunk:
+    dev: svglite
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(knitr)
+```
+
+# Introduction
+
+Data breach is a common sight with the increase in technological surge, resulting in more companies bringing their physical work into the online space. One might think that these data breaches are irrelevant to them, but they will be surprised at how they might be the sole reason for such incident occurrences. Over the years, the number of data breaches have been increasing, from about 25 breaches in 2012 to currently in year 2024, 17 breaches have occurred, and it is barely half the year passed! [insert the dataset excel for references] 
+
+To raise awareness that every industry can be implicated by data breaches, it is important to show the sector and their respective companies in the sectors have been affected, not limiting to only smaller companies like Cooler Master, even big companies like Twitter have been a victim to data breach. This visualization has been dubbed “World’s Biggest Data Breaches & Hacks”, but it can be improved due to its current cluster and small wordings on less important data breaches that had happened. 
+
+# Previous Visualization
+
+```{r}
+#| label: previous-visualization
+#| fig.cap: "World's Biggest Data Breaches & Hacks, published by Information is Beautiful"
+#| out-width: "100%"
+
+include_graphics("./images/previous_visualization.png")
+```
+
+# Strengths of Original Chart
+
+* **Clear Representation of Magnitude**: The bubble sizes in the chart effectively convey the scale of each data breach, making it easy to assess the impact without looking at numerical details. 
+
+* **Categorical Differentiation**: Color coding allows for quick identification of different categories or years, making it simple to track temporal trends or categorize breaches by industry or type. 
+
+* **Informative Labels**: Each bubble is labeled with the affected entity’s name and the number of records compromised, providing immediate context without the need to cross-reference with external documents or data sources. 
+
+* **Trend Identification**: The vertical placement of the bubbles suggests a timeline, showing trends over the years and the evolution of data breaches in frequency and scale. 
+
+* **Visual Impact**: The bubble chart format has a strong visual appeal that captures attention, encouraging further exploration and retaining viewer attention. 
+
+# Suggested Improvements
+
+The original chart is cluttered and lacks a clear objective, making it difficult for viewers to quickly understand the data	. Some suggested enhancements are: 
+
+* **Simplification**: Focuses on the top 10 sectors affected by data breaches, reducing clutter and highlighting significant trends 
+
+* **Categorization**: Groups data by sector for easier comparison and understanding of which industries are most vulnerable 
+
+* **Visual Consistency**: The use of consistent color coding for each sector aids in quick recognition and reduces cognitive load. Viewers can easily follow the color scheme to track data breaches across the timeline without getting confused by random color variations 
+
+* **Change the plot to a Gantt Chart**: To visualize the timeline and impact of data breaches clearly. It allows audiences to clearly focus on what message the data in the charts are sending as well. 
+
+
+# Implementation
+
+## Data
+
+The data was obtained from the "World's Biggest Data Breaches & Hacks" Google Spreadsheet. Key columns include organizations, records lost, year, sector, method, and interesting story. To maintain relevance and reduce complexity, sectors with similar characteristics were merged into broader categories such as Web, Financial, Retail, and others. The emphasis was then refined to the top 10 sectors based on total records lost between 2010 and 2024. Missing values in significant columns were addressed to guarantee data integrity. 
+
+## Software
+
+The implementation utilized the Quarto publication framework, R programming language, and the following third-party packages: 
+
+* **tidyverse** for data transformation, including **dplyr** for data cleaning, grouping, and summarization 
+
+* **ggplot2** for powerful visualization customization options based on graphic grammar 
+
+* **scales** for adjusting the axis scales 
+
+* **ggrepel** for improved text labelling  
+
+# Improved Visualization
+
+```{r}
+#| label: improved-visualization
+#| fig.cap: "Data Breaches Timeline by Sector"
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig-width: 6.0
+#| fig-height: 5.8
+#| echo: FALSE
+#| warning: FALSE
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(ggrepel)
+library(scales)
+library(tidyverse)
+
+# Read the data
+data <- read.csv("IIB Data Breaches - LATEST - breaches.csv")
+
+# Check for any NA values in important columns
+#print(sum(is.na(data$sector)))
+#print(sum(is.na(data$year)))
+#print(sum(is.na(data$records.lost)))
+
+# Group sectors into broader categories
+data <- data %>%
+  mutate(
+    sector_group = case_when(
+      grepl("web", sector, ignore.case = TRUE) ~ "Web",
+      grepl("healthcare|health", sector, ignore.case = TRUE) ~ "Healthcare",
+      grepl("app", sector, ignore.case = TRUE) ~ "App",
+      grepl("retail", sector, ignore.case = TRUE) ~ "Retail",
+      grepl("gaming", sector, ignore.case = TRUE) ~ "Gaming",
+      grepl("transport", sector, ignore.case = TRUE) ~ "Transport",
+      grepl("financial|finance", sector, ignore.case = TRUE) ~ "Financial",
+      grepl("tech", sector, ignore.case = TRUE) ~ "Tech",
+      grepl("government", sector, ignore.case = TRUE) ~ "Government",
+      grepl("telecoms", sector, ignore.case = TRUE) ~ "Telecoms",
+      grepl("legal", sector, ignore.case = TRUE) ~ "Legal",
+      grepl("media", sector, ignore.case = TRUE) ~ "Media",
+      grepl("academic", sector, ignore.case = TRUE) ~ "Academic",
+      grepl("energy", sector, ignore.case = TRUE) ~ "Energy",
+      grepl("military", sector, ignore.case = TRUE) ~ "Military",
+      TRUE ~ "Miscellaneous"
+    )
+  )
+
+# Convert `records lost` to numeric, handling non-numeric values
+data <- data %>%
+  mutate(records.lost = as.numeric(gsub("[^0-9]", "", records.lost)),
+         year = as.numeric(year)) %>%
+  drop_na(records.lost, year, sector_group)  # Drop rows with missing values in critical columns
+
+# Filter the data based on the specified year range and minimum records lost
+start_year <- 2010
+end_year <- 2024
+
+data <- data %>%
+  filter(year >= start_year & year <= end_year)
+
+# Ensure no NA values in the dataset
+data <- data %>%
+  drop_na(records.lost, year, sector_group)
+
+# Calculate total records lost for each sector group and select top 10 sectors
+top_sectors <- data %>%
+  group_by(sector_group) %>%
+  summarize(total_records_lost = sum(records.lost)) %>%
+  arrange(desc(total_records_lost)) %>%
+  top_n(10, wt = total_records_lost) %>%
+  pull(sector_group)
+
+# Print the top sectors to check the sorting
+# print(top_sectors)
+
+# Filter the data to include only top 10 sectors
+data <- data %>%
+  filter(sector_group %in% top_sectors)
+
+# Convert the year to a date format for plotting
+data <- data %>%
+  mutate(StartDate = as.Date(paste(year, "-01-01", sep = "")),
+         EndDate = as.Date(paste(year, "-12-31", sep = "")))
+
+# Sort the sectors by total records lost
+sector_levels <- data %>%
+  group_by(sector_group) %>%
+  summarize(total_records_lost = sum(records.lost)) %>%
+  arrange(desc(total_records_lost)) %>%
+  pull(sector_group)
+
+data <- data %>%
+  mutate(sector_group = factor(sector_group, levels = rev(sector_levels)))
+
+# Create the Gantt chart with improved aesthetics and color
+gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group, color = sector_group)) +
+  geom_segment(aes(xend = EndDate, yend = sector_group, size = records.lost), show.legend = TRUE) +
+  geom_point(aes(size = records.lost), show.legend = TRUE) +
+  scale_size_continuous(range = c(2, 10), breaks = c(50000000, 100000000, 500000000, 1000000000), labels = c("50M", "100M", "500M", "1B")) +
+  theme_minimal() +
+  labs(
+    title = "Data Breaches Timeline by Sector",
+    x = "Year",
+    y = "Sector",
+    size = "Records Breached"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12),
+    legend.position = "top",
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10),
+    plot.margin = margin(10, 10, 10, 10)
+  ) +
+  guides(color = FALSE) 
+
+# Print the plot
+print(gantt_plot)
+
+```
+
+# Further Sugestions for interactivity
+
+# Conclusion
