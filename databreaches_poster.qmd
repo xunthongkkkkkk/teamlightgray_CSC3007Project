@@ -40,15 +40,15 @@ include_graphics("./images/previous_visualization.png")
 
 # Strengths of Original Chart
 
--   **Clear Representation of Magnitude**: The bubble sizes in the chart effectively convey the scale of each data breach, making it easy to assess the impact without looking at numerical details.
+-   **Clear Representation of Magnitude**: The bubble sizes in the chart effectively convey the scale of each data breach. Larger bubbles represent more significant breaches, while smaller bubbles indicate less severe incidents. This visual hierarchy makes it easy for viewers to quickly assess the relative impact of each data breach without needing to delve into numerical details.
 
--   **Categorical Differentiation**: Color coding allows for quick identification of different categories or years, making it simple to track temporal trends or categorize breaches by industry or type.
+-   **Categorical Differentiation**: The use of color coding allows for quick identification of different categories or years. This helps viewers distinguish between various types of breaches or the periods in which they occurred. For instance, breaches from different years can be color-coded differently, making it simple to track temporal trends or categorize the breaches by industry or type.
 
--   **Informative Labels**: Each bubble is labeled with the affected entity’s name and the number of records compromised, providing immediate context without the need to cross-reference with external documents or data sources.
+-   **Informative Labels**: Each bubble is labeled with the name of the affected entity and the number of records compromised. This labeling provides immediate context, allowing viewers to quickly identify which companies or organizations were breached and the extent of the breach. The clear labeling eliminates the need for viewers to cross-reference with external documents or data sources.
 
--   **Trend Identification**: The vertical placement of the bubbles suggests a timeline, showing trends over the years and the evolution of data breaches in frequency and scale.
+-   **Trend Identification**: The vertical placement of the bubbles suggests a timeline, allowing viewers to see trends over the years. For example, the chart can show whether data breaches have become more frequent or larger in scale over time. This temporal element adds depth to the visualization, enabling viewers to understand not just the magnitude of individual breaches but also how the overall landscape of data breaches has evolved.
 
--   **Visual Impact**: The bubble chart format has a strong visual appeal that captures attention, encouraging further exploration and retaining viewer attention.
+-   **Visual Impact**: The bubble chart format has a strong visual appeal that captures attention. The vibrant colors and varying bubble sizes create a dynamic and engaging visualization. This immediate visual interest is crucial in data visualization, as it encourages viewers to explore the data further and helps in retaining their attention.
 
 # Suggested Improvements
 
@@ -95,6 +95,8 @@ The implementation utilized the Quarto publication framework, R programming lang
 #| fig-height: 5.0
 #| echo: FALSE
 #| warning: FALSE
+
+
 # Load required libraries
 library(ggplot2)
 library(dplyr)
@@ -108,11 +110,6 @@ data <- read.csv("IIB Data Breaches - LATEST - breaches.csv")
 
 data <- data  %>%
   slice(-1)
-
-# Check for any NA values in important columns
-#print(sum(is.na(data$sector)))
-#print(sum(is.na(data$year)))
-#print(sum(is.na(data$records.lost)))
 
 # Group sectors into broader categories
 data <- data %>%
@@ -207,20 +204,20 @@ method_summary <- data %>%
   summarize(count = n())
 
 # Plot the pie chart
-ggplot(method_summary, aes(x = "", y = count, fill = method)) +
-  geom_bar(stat = "identity", width = 1) +
-  coord_polar("y", start = 0) +
-  scale_fill_brewer(palette = "Set1") +
-  theme_minimal() +
-  labs(title = "Data Breaches by Method", fill = "Method") +
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        panel.border = element_blank(),
-        panel.grid = element_blank(),
-        axis.ticks = element_blank(),
-        plot.title = element_text(hjust = 0.5))
+#ggplot(method_summary, aes(x = "", y = count, fill = method)) +
+#  geom_bar(stat = "identity", width = 1) +
+#  coord_polar("y", start = 0) +
+#  scale_fill_brewer(palette = "Set1") +
+#  theme_minimal() +
+#  labs(title = "Data Breaches by Method", fill = "Method") +
+#  theme(axis.title.x = element_blank(),
+#        axis.title.y = element_blank(),
+#        axis.text.x = element_blank(),
+#        axis.text.y = element_blank(),
+#        panel.border = element_blank(),
+#        panel.grid = element_blank(),
+#        axis.ticks = element_blank(),
+#        plot.title = element_text(hjust = 0.5))
 
 # Create the Gantt chart with improved aesthetics and color
 gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group, color = sector_group)) +
