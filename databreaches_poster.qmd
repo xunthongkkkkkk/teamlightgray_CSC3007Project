@@ -24,9 +24,9 @@ library(knitr)
 
 # Introduction
 
-Data breach is a common sight with the increase in technological surge, resulting in more companies bringing their physical work into the online space. One might think that these data breaches are irrelevant to them, but they will be surprised at how they might be the sole reason for such incident occurrences. Over the years, the number of data breaches have been increasing, from about 25 breaches in 2012 to currently in year 2024, 17 breaches have occurred, and it is barely half the year passed! [insert the dataset excel for references] 
+Data breach is a common sight with the increase in technological surge, resulting in more companies bringing their physical work into the online space. One might think that these data breaches are irrelevant to them, but they will be surprised at how they might be the sole reason for such incident occurrences. Over the years, the number of data breaches have been increasing, from about 25 breaches in 2012 to currently in year 2024, 17 breaches have occurred, and it is barely half the year passed! \[insert the dataset excel for references\]
 
-To raise awareness that every industry can be implicated by data breaches, it is important to show the sector and their respective companies in the sectors have been affected, not limiting to only smaller companies like Cooler Master, even big companies like Twitter have been a victim to data breach. This visualization has been dubbed “World’s Biggest Data Breaches & Hacks”, but it can be improved due to its current cluster and small wordings on less important data breaches that had happened. 
+To raise awareness that every industry can be implicated by data breaches, it is important to show the sector and their respective companies in the sectors have been affected, not limiting to only smaller companies like Cooler Master, even big companies like Twitter have been a victim to data breach. This visualization has been dubbed “World’s Biggest Data Breaches & Hacks”, but it can be improved due to its current cluster and small wordings on less important data breaches that had happened.
 
 # Previous Visualization
 
@@ -40,46 +40,49 @@ include_graphics("./images/previous_visualization.png")
 
 # Strengths of Original Chart
 
-* **Clear Representation of Magnitude**: The bubble sizes in the chart effectively convey the scale of each data breach, making it easy to assess the impact without looking at numerical details. 
+-   **Clear Representation of Magnitude**: The bubble sizes in the chart effectively convey the scale of each data breach, making it easy to assess the impact without looking at numerical details.
 
-* **Categorical Differentiation**: Color coding allows for quick identification of different categories or years, making it simple to track temporal trends or categorize breaches by industry or type. 
+-   **Categorical Differentiation**: Color coding allows for quick identification of different categories or years, making it simple to track temporal trends or categorize breaches by industry or type.
 
-* **Informative Labels**: Each bubble is labeled with the affected entity’s name and the number of records compromised, providing immediate context without the need to cross-reference with external documents or data sources. 
+-   **Informative Labels**: Each bubble is labeled with the affected entity’s name and the number of records compromised, providing immediate context without the need to cross-reference with external documents or data sources.
 
-* **Trend Identification**: The vertical placement of the bubbles suggests a timeline, showing trends over the years and the evolution of data breaches in frequency and scale. 
+-   **Trend Identification**: The vertical placement of the bubbles suggests a timeline, showing trends over the years and the evolution of data breaches in frequency and scale.
 
-* **Visual Impact**: The bubble chart format has a strong visual appeal that captures attention, encouraging further exploration and retaining viewer attention. 
+-   **Visual Impact**: The bubble chart format has a strong visual appeal that captures attention, encouraging further exploration and retaining viewer attention.
 
 # Suggested Improvements
 
-The original chart is cluttered and lacks a clear objective, making it difficult for viewers to quickly understand the data	. Some suggested enhancements are: 
+The original chart is cluttered and lacks a clear objective, making it difficult for viewers to quickly understand the data . Some suggested enhancements are:
 
-* **Simplification**: Focuses on the top 10 sectors affected by data breaches, reducing clutter and highlighting significant trends 
+-   **Simplification**: Focuses on the top 10 sectors affected by data breaches, reducing clutter and highlighting significant trends
 
-* **Categorization**: Groups data by sector for easier comparison and understanding of which industries are most vulnerable 
+-   **Categorization**: Groups data by sector for easier comparison and understanding of which industries are most vulnerable
 
-* **Visual Consistency**: The use of consistent color coding for each sector aids in quick recognition and reduces cognitive load. Viewers can easily follow the color scheme to track data breaches across the timeline without getting confused by random color variations 
+-   **Visual Consistency**: The use of consistent color coding for each sector aids in quick recognition and reduces cognitive load. Viewers can easily follow the color scheme to track data breaches across the timeline without getting confused by random color variations
 
-* **Change the plot to a Gantt Chart**: To visualize the timeline and impact of data breaches clearly. It allows audiences to clearly focus on what message the data in the charts are sending as well. 
-
+-   **Change the plot to a Gantt Chart**: To visualize the timeline and impact of data breaches clearly. It allows audiences to clearly focus on what message the data in the charts are sending as well.
 
 # Implementation
 
 ## Data
 
-The data was obtained from the "World's Biggest Data Breaches & Hacks" Google Spreadsheet. Key columns include organizations, records lost, year, sector, method, and interesting story. To maintain relevance and reduce complexity, sectors with similar characteristics were merged into broader categories such as Web, Financial, Retail, and others. The emphasis was then refined to the top 10 sectors based on total records lost between 2010 and 2024. Missing values in significant columns were addressed to guarantee data integrity. 
+The data was obtained from the "World's Biggest Data Breaches & Hacks" Google Spreadsheet. Key columns include organizations, records lost, year, sector, method, and interesting story. To maintain relevance and reduce complexity, sectors with similar characteristics were merged into broader categories such as Web, Financial, Retail, and others. The emphasis was then refined to the top 10 sectors based on total records lost between 2010 and 2024. Missing values in significant columns were addressed to guarantee data integrity.
 
 ## Software
 
-The implementation utilized the Quarto publication framework, R programming language, and the following third-party packages: 
+The implementation utilized the Quarto publication framework, R programming language, and the following third-party packages:
 
-* **tidyverse** for data transformation, including **dplyr** for data cleaning, grouping, and summarization 
+-   **readcsv** for data import
 
-* **ggplot2** for powerful visualization customization options based on graphic grammar 
+-   **tidyverse** for data transformation, including **dplyr** for data cleaning, grouping, and summarization
 
-* **scales** for adjusting the axis scales 
+-   **ggplot2** for powerful visualization customization options based on graphic grammar
 
-* **ggrepel** for improved text labelling  
+-   **scales** for adjusting the axis scales
+
+-   **ggrepel** for improved text labelling
+
+-   **knitr** for dynamic document generation
 
 # Improved Visualization
 
@@ -88,8 +91,8 @@ The implementation utilized the Quarto publication framework, R programming lang
 #| fig.cap: "Data Breaches Timeline by Sector"
 #| out.width: "100%"
 #| fig.align: "center"
-#| fig-width: 6.0
-#| fig-height: 5.8
+#| fig-width: 5.0
+#| fig-height: 5.0
 #| echo: FALSE
 #| warning: FALSE
 # Load required libraries
@@ -98,9 +101,13 @@ library(dplyr)
 library(ggrepel)
 library(scales)
 library(tidyverse)
+library(RColorBrewer)
 
 # Read the data
 data <- read.csv("IIB Data Breaches - LATEST - breaches.csv")
+
+data <- data  %>%
+  slice(-1)
 
 # Check for any NA values in important columns
 #print(sum(is.na(data$sector)))
@@ -177,6 +184,44 @@ sector_levels <- data %>%
 data <- data %>%
   mutate(sector_group = factor(sector_group, levels = rev(sector_levels)))
 
+# Summarize the count for each method
+data <- data %>%
+  mutate(method = tolower(trimws(method)))
+
+# Handle "hacked, poor security" by splitting into two separate entries
+data <- data %>%
+  mutate(method = ifelse(method == "hacked, poor security", "hacked/poor security", method)) %>%
+  separate_rows(method, sep = "/")
+
+# Rename methods for better clarity
+data$method <- recode(data$method,
+                      "hacked" = "Cyber Attack",
+                      "inside job" = "Internal Breach",
+                      "lost device" = "Lost Device",
+                      "oops!" = "Accidental Exposure",
+                      "poor security" = "Poor Security")
+
+# Summarize the count for each method
+method_summary <- data %>%
+  group_by(method) %>%
+  summarize(count = n())
+
+# Plot the pie chart
+ggplot(method_summary, aes(x = "", y = count, fill = method)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  scale_fill_brewer(palette = "Set1") +
+  theme_minimal() +
+  labs(title = "Data Breaches by Method", fill = "Method") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.border = element_blank(),
+        panel.grid = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+
 # Create the Gantt chart with improved aesthetics and color
 gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group, color = sector_group)) +
   geom_segment(aes(xend = EndDate, yend = sector_group, size = records.lost), show.legend = TRUE) +
@@ -203,9 +248,12 @@ gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group, color = sector_g
   guides(color = FALSE) 
 
 # Print the plot
-print(gantt_plot)
+gantt_plot
+
 
 ```
+
+
 
 # Further Sugestions for interactivity
 
