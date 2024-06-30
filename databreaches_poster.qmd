@@ -24,7 +24,7 @@ library(knitr)
 
 # Introduction
 
-Data breach is a common sight with the increase in technological surge, resulting in more companies bringing their physical work into the online space. One might think that these data breaches are irrelevant to them, but they will be surprised at how they might be the sole reason for such incident occurrences. Over the years, the number of data breaches have been increasing, from about 25 breaches in 2012 to currently in year 2024, 17 breaches have occurred, and it is barely half the year passed! \[insert the dataset excel for references\]
+Data breach is a common sight with the increase in technological surge, resulting in more companies bringing their physical work into the online space. One might think that these data breaches are irrelevant to them, but they will be surprised at how they might be the sole reason for such incident occurrences. Over the years, the number of data breaches have been increasing, from about 25 breaches in 2012 to currently in year 2024, 17 breaches have occurred, and it is barely half the year passed! 
 
 To raise awareness that every industry can be implicated by data breaches, it is important to show the sector and their respective companies in the sectors have been affected, not limiting to only smaller companies like Cooler Master, even big companies like Twitter have been a victim to data breach. This visualization has been dubbed “World’s Biggest Data Breaches & Hacks”, but it can be improved due to its current cluster and small wordings on less important data breaches that had happened.
 
@@ -40,15 +40,15 @@ include_graphics("./images/previous_visualization.png")
 
 # Strengths of Original Chart
 
--   **Clear Representation of Magnitude**: The bubble sizes in the chart effectively convey the scale of each data breach. Larger bubbles represent more significant breaches, while smaller bubbles indicate less severe incidents. This visual hierarchy makes it easy for viewers to quickly assess the relative impact of each data breach without needing to delve into numerical details.
+-   **Clear Representation of Magnitude**: The bubble sizes in the chart effectively convey the scale of each data breach, making it easy to assess the impact without looking at numerical details.
 
--   **Categorical Differentiation**: The use of color coding allows for quick identification of different categories or years. This helps viewers distinguish between various types of breaches or the periods in which they occurred. For instance, breaches from different years can be color-coded differently, making it simple to track temporal trends or categorize the breaches by industry or type.
+-   **Categorical Differentiation**: Color coding allows for quick identification of different categories or years, making it simple to track temporal trends or categorize breaches by industry or type.
 
--   **Informative Labels**: Each bubble is labeled with the name of the affected entity and the number of records compromised. This labeling provides immediate context, allowing viewers to quickly identify which companies or organizations were breached and the extent of the breach. The clear labeling eliminates the need for viewers to cross-reference with external documents or data sources.
+-   **Informative Labels**:  Each bubble is labeled with the affected entity’s name and the number of records compromised, providing immediate context without the need to cross-reference with external documents or data sources.
 
--   **Trend Identification**: The vertical placement of the bubbles suggests a timeline, allowing viewers to see trends over the years. For example, the chart can show whether data breaches have become more frequent or larger in scale over time. This temporal element adds depth to the visualization, enabling viewers to understand not just the magnitude of individual breaches but also how the overall landscape of data breaches has evolved.
+-   **Trend Identification**:  The vertical placement of the bubbles suggests a timeline, showing trends over the years and the evolution of data breaches in frequency and scale.
 
--   **Visual Impact**: The bubble chart format has a strong visual appeal that captures attention. The vibrant colors and varying bubble sizes create a dynamic and engaging visualization. This immediate visual interest is crucial in data visualization, as it encourages viewers to explore the data further and helps in retaining their attention.
+-   **Visual Impact**: The bubble chart format has a strong visual appeal that captures attention, encouraging further exploration and retaining viewer attention.
 
 # Suggested Improvements
 
@@ -58,9 +58,12 @@ The original chart is cluttered and lacks a clear objective, making it difficult
 
 -   **Categorization**: Groups data by sector for easier comparison and understanding of which industries are most vulnerable
 
--   **Visual Consistency**: The use of consistent color coding for each sector aids in quick recognition and reduces cognitive load. Viewers can easily follow the color scheme to track data breaches across the timeline without getting confused by random color variations
-
 -   **Change the plot to a Gantt Chart**: To visualize the timeline and impact of data breaches clearly. It allows audiences to clearly focus on what message the data in the charts are sending as well.
+
+-   **Insights Focused**: To reduce cognitive load, the visualization should emphasize key insights, such as the top sectors affected by data breaches and the total records lost over time.
+
+-   **Visual Consistency**: The use of consistent color coding for each insights aids in quick recognition and reduces cognitive load. Viewers can easily follow the color scheme to track data breaches across the timeline without getting confused by random color variations
+
 
 # Implementation
 
@@ -86,13 +89,19 @@ The implementation utilized the Quarto publication framework, R programming lang
 
 # Improved Visualization
 
+- **Insight 1**: The chart focuses on the top 10 sectors affected by data breaches between 2010 and 2024, highlighting the most vulnerable industries.
+
+- **Insight 2**: The chart shows the an interesting trend of data breaches over time
+
+- **Insight 3**: The chart uses color coding to differentiate between high vulnerability sectors and emerging threats, providing additional context to the data.
+
 ```{r}
 #| label: improved-visualization
 #| fig.cap: "Data Breaches Timeline by Sector"
 #| out.width: "100%"
 #| fig.align: "center"
-#| fig-width: 5.0
-#| fig-height: 5.0
+#| fig-width: 10.0
+#| fig-height: 10.0
 #| echo: FALSE
 #| warning: FALSE
 
@@ -103,13 +112,10 @@ library(dplyr)
 library(ggrepel)
 library(scales)
 library(tidyverse)
-library(RColorBrewer)
+library(gridExtra)
 
 # Read the data
 data <- read.csv("IIB Data Breaches - LATEST - breaches.csv")
-
-data <- data  %>%
-  slice(-1)
 
 # Group sectors into broader categories
 data <- data %>%
@@ -131,24 +137,17 @@ data <- data %>%
       grepl("energy", sector, ignore.case = TRUE) ~ "Energy",
       grepl("military", sector, ignore.case = TRUE) ~ "Military",
       TRUE ~ "Miscellaneous"
-    )
-  )
-
-# Convert `records lost` to numeric, handling non-numeric values
-data <- data %>%
-  mutate(records.lost = as.numeric(gsub("[^0-9]", "", records.lost)),
-         year = as.numeric(year)) %>%
-  drop_na(records.lost, year, sector_group)  # Drop rows with missing values in critical columns
+    ),
+    records.lost = as.numeric(gsub("[^0-9]", "", records.lost)),
+    year = as.numeric(year)
+  ) %>%
+  drop_na(records.lost, year, sector_group)
 
 # Filter the data based on the specified year range and minimum records lost
 start_year <- 2010
 end_year <- 2024
-
 data <- data %>%
-  filter(year >= start_year & year <= end_year)
-
-# Ensure no NA values in the dataset
-data <- data %>%
+  filter(year >= start_year & year <= end_year) %>%
   drop_na(records.lost, year, sector_group)
 
 # Calculate total records lost for each sector group and select top 10 sectors
@@ -158,9 +157,6 @@ top_sectors <- data %>%
   arrange(desc(total_records_lost)) %>%
   top_n(10, wt = total_records_lost) %>%
   pull(sector_group)
-
-# Print the top sectors to check the sorting
-# print(top_sectors)
 
 # Filter the data to include only top 10 sectors
 data <- data %>%
@@ -181,77 +177,101 @@ sector_levels <- data %>%
 data <- data %>%
   mutate(sector_group = factor(sector_group, levels = rev(sector_levels)))
 
-# Summarize the count for each method
+# Define important sectors to highlight
+highlight_sectors <- c("Web", "Financial", "App", "Transport")
+
+# Add a new column to specify color based on sector importance
 data <- data %>%
-  mutate(method = tolower(trimws(method)))
+  mutate(
+    highlight = ifelse(as.character(sector_group) %in% highlight_sectors, as.character(sector_group), "Other")
+  )
 
-# Handle "hacked, poor security" by splitting into two separate entries
+# Convert sector_group to a factor and then to numeric for plotting
+data$sector_group_num <- as.numeric(factor(data$sector_group))
+
+# Calculate the total number of data breaches each year
+yearly_data <- data %>%
+  group_by(year) %>%
+  summarize(total_records_lost = sum(records.lost))
+yearly_data <- yearly_data %>%
+  filter(year < 2024)
 data <- data %>%
-  mutate(method = ifelse(method == "hacked, poor security", "hacked/poor security", method)) %>%
-  separate_rows(method, sep = "/")
+  filter(year < 2024)
+# Define color palette
+color_palette <- c("Web" = "red", "Financial" = "red", "App" = "orange2", "Transport" = "orange2", "Other" = "gray")
+coeff <- max(yearly_data$total_records_lost) / length(unique(data$sector_group_num))  # Adjust this coefficient to normalize the secondary axis
 
-# Rename methods for better clarity
-data$method <- recode(data$method,
-                      "hacked" = "Cyber Attack",
-                      "inside job" = "Internal Breach",
-                      "lost device" = "Lost Device",
-                      "oops!" = "Accidental Exposure",
-                      "poor security" = "Poor Security")
+# Custom labelling function
+label_billion <- function(x) {
+   paste0(scales::comma(x / 1e9), "B")
+}
 
-# Summarize the count for each method
-method_summary <- data %>%
-  group_by(method) %>%
-  summarize(count = n())
-
-# Plot the pie chart
-#ggplot(method_summary, aes(x = "", y = count, fill = method)) +
-#  geom_bar(stat = "identity", width = 1) +
-#  coord_polar("y", start = 0) +
-#  scale_fill_brewer(palette = "Set1") +
-#  theme_minimal() +
-#  labs(title = "Data Breaches by Method", fill = "Method") +
-#  theme(axis.title.x = element_blank(),
-#        axis.title.y = element_blank(),
-#        axis.text.x = element_blank(),
-#        axis.text.y = element_blank(),
-#        panel.border = element_blank(),
-#        panel.grid = element_blank(),
-#        axis.ticks = element_blank(),
-#        plot.title = element_text(hjust = 0.5))
-
-# Create the Gantt chart with improved aesthetics and color
-gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group, color = sector_group)) +
-  geom_segment(aes(xend = EndDate, yend = sector_group, size = records.lost), show.legend = TRUE) +
-  geom_point(aes(size = records.lost), show.legend = TRUE) +
+# Create the plot
+gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group_num)) +
+  geom_segment(aes(xend = EndDate, yend = sector_group_num, size = records.lost, color = highlight), show.legend = TRUE) +
+  geom_point(aes(size = records.lost, color = highlight), show.legend = TRUE) +
   scale_size_continuous(range = c(2, 10), breaks = c(50000000, 100000000, 500000000, 1000000000), labels = c("50M", "100M", "500M", "1B")) +
-  theme_minimal() +
+  scale_color_manual(values = color_palette, 
+                     breaks = c("Web", "App"),
+                     labels = c("High Vulnerability", "Emerging Threats"),
+                     name = "Insights",
+                     ) +
+  scale_x_date(date_labels = "%Y", 
+               date_breaks = "1 years", 
+               limits = as.Date(c("2010-01-01", "2023-12-31"))
+               ) +
+  scale_y_continuous(
+    name = "Sector",
+    breaks = 1:length(unique(data$sector_group_num)),
+    labels = levels(data$sector_group),
+    sec.axis = sec_axis(~ . * coeff, 
+                        name = "Total Records Stolen", 
+                        breaks = seq(0, 3e9, by = 0.5e9), 
+                        labels = label_billion)
+    ) +
   labs(
     title = "Data Breaches Timeline by Sector",
     x = "Year",
-    y = "Sector",
     size = "Records Breached"
   ) +
+  theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title.x = element_text(size = 14),
-    axis.title.y = element_text(size = 14),
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, vjust = 2, face = "bold"),
+    axis.title.y.right = element_text(size = 14, vjust = 2, face = "bold", color = "black"),
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.text.y = element_text(size = 12),
+    axis.text.y.right = element_text(size = 12, color = "black"),  # Improve readability
+    panel.grid.major.x = element_line(color = "Gray90" , size = 0.5),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
     legend.position = "top",
-    legend.title = element_text(size = 12),
+    legend.box.just = "center",
+    legend.title = element_text(size = 12, face = "bold"),
     legend.text = element_text(size = 10),
     plot.margin = margin(10, 10, 10, 10)
   ) +
-  guides(color = FALSE) 
+  guides(size = guide_legend(override.aes = list(color = "black"))) +  # Change legend color to black for better visibility
+  geom_text_repel(aes(label = ifelse(records.lost >= 500000000, paste(records.lost /1000000, "M"), "")), 
+ size = 3.5, color = "black", nudge_y = 0.3, segment.color = "grey50") +
+  geom_smooth(data = yearly_data, aes(x = as.Date(paste(year, "-01-01", sep = "")), y = (total_records_lost / coeff) + 1), method = "loess", se = FALSE,  color = "turquoise2", size = 1, alpha = 0.3) 
 
 # Print the plot
-gantt_plot
-
+print(gantt_plot)
 
 ```
 
-
-
 # Further Sugestions for interactivity
 
+-   **Interactive Filtering**: Allow users to filter data breaches by sector, year, or records lost to focus on specific subsets of the data.
+
+-   **Tooltip Information**: Display additional details about each data breach, such as the affected organization, records lost, and breach method, when hovering over the bubbles.
+
+-   **Dynamic Sorting**: Enable users to sort the data breaches by sector, records lost, or year to explore different trends and patterns.
+
+
 # Conclusion
+
+The improved visualization effectively highlights the top 10 sectors affected by data breaches between 2010 and 2024, providing a clear and concise overview of the data. By categorizing the sectors and visualizing the timeline of data breaches, the chart offers valuable insights into the industries most vulnerable to cyber threats. The use of color coding, size differentiation, and text labels enhances the readability and interpretability of the chart, making it easier for viewers to grasp the key information at a glance. The proposed interactivity features would further enhance the user experience and enable more in-depth exploration of the data.

@@ -160,8 +160,6 @@ gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group_num)) +
   guides(size = guide_legend(override.aes = list(color = "black"))) +  # Change legend color to black for better visibility
   geom_text_repel(aes(label = ifelse(records.lost >= 500000000, paste(records.lost /1000000, "M"), "")), 
  size = 3.5, color = "black", nudge_y = 0.3, segment.color = "grey50") +
-#geom_line(data = yearly_data, aes(x = as.Date(paste(year, "-01-01", sep = "")), y = (total_records_lost / coeff) + 1), 
-           # color = "darkgreen", size = 1, alpha = 0.3, linetype = "solid") 
   geom_smooth(data = yearly_data, aes(x = as.Date(paste(year, "-01-01", sep = "")), y = (total_records_lost / coeff) + 1), method = "loess", se = FALSE,  color = "turquoise2", size = 1, alpha = 0.3) 
 
 # Print the plot
