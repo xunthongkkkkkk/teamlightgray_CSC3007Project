@@ -102,7 +102,7 @@ yearly_data <- yearly_data %>%
 data <- data %>%
   filter(year < 2024)
 # Define color palette
-color_palette <- c("Web" = "red", "Financial" = "red", "App" = "orange", "Transport" = "orange", "Other" = "gray")
+color_palette <- c("Web" = "red", "Financial" = "red", "App" = "orange2", "Transport" = "orange2", "Other" = "gray")
 coeff <- max(yearly_data$total_records_lost) / length(unique(data$sector_group_num))  # Adjust this coefficient to normalize the secondary axis
 
 # Custom labelling function
@@ -143,7 +143,7 @@ gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group_num)) +
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
     axis.title.x = element_text(size = 14, face = "bold"),
     axis.title.y = element_text(size = 14, vjust = 2, face = "bold"),
-    axis.title.y.right = element_text(size = 14, vjust = 2, face = "bold", color = "darkgreen"),
+    axis.title.y.right = element_text(size = 14, vjust = 2, face = "bold", color = "black"),
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.text.y = element_text(size = 12),
     axis.text.y.right = element_text(size = 12, color = "black"),  # Improve readability
@@ -162,7 +162,7 @@ gantt_plot <- ggplot(data, aes(x = StartDate, y = sector_group_num)) +
  size = 3.5, color = "black", nudge_y = 0.3, segment.color = "grey50") +
 #geom_line(data = yearly_data, aes(x = as.Date(paste(year, "-01-01", sep = "")), y = (total_records_lost / coeff) + 1), 
            # color = "darkgreen", size = 1, alpha = 0.3, linetype = "solid") 
-  geom_smooth(data = yearly_data, aes(x = as.Date(paste(year, "-01-01", sep = "")), y = (total_records_lost / coeff) + 1), method = "loess", se = FALSE,  color = "lightskyblue", size = 1, alpha = 0.3) 
+  geom_smooth(data = yearly_data, aes(x = as.Date(paste(year, "-01-01", sep = "")), y = (total_records_lost / coeff) + 1), method = "loess", se = FALSE,  color = "turquoise2", size = 1, alpha = 0.3) 
 
 # Print the plot
 print(gantt_plot)
