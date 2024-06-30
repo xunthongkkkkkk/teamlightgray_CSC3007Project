@@ -4,7 +4,8 @@ author: "Team Lightgray"
 format: 
   poster-typst: 
     size: "33x23" # Approximately A1
-    poster-authors: "Team Lightgray"
+    poster-authors: "Cham Xun Tong, Reagan Chia, Teo Shun Yao, Shermaine Peh, Pang Jing Jie, Enrique Carlos Marcelo, Garrick Low"
+    studentids: "2102436, 2102539, 2101104, 2101573, 2100932, 2102740, 2100590"
     departments: "Information and Communication Technologies"
     institution-logo: "./images/sit-logo.png"
     footer-text: "Information Visualization 2024"
@@ -24,9 +25,9 @@ library(knitr)
 
 # Introduction
 
-Data breach is a common sight with the increase in technological surge, resulting in more companies bringing their physical work into the online space. One might think that these data breaches are irrelevant to them, but they will be surprised at how they might be the sole reason for such incident occurrences. Over the years, the number of data breaches have been increasing, from about 25 breaches in 2012 to currently in year 2024, 17 breaches have occurred, and it is barely half the year passed! 
+Data breach is a common sight with the increase in technological surge, resulting in more companies bringing their physical work into the online space. One might think that these data breaches are irrelevant to them, but they will be surprised at how they might be the sole reason for such incident occurrences. Over the years, the number of data breaches have been increasing, from about 25 breaches in 2012 to currently in year 2024, 17 breaches have already occurred, and it is barely half the year passed!  
 
-To raise awareness that every industry can be implicated by data breaches, it is important to show the sector and their respective companies in the sectors have been affected, not limiting to only smaller companies like Cooler Master, even big companies like Twitter have been a victim to data breach. This visualization has been dubbed “World’s Biggest Data Breaches & Hacks”, but it can be improved due to its current cluster and small wordings on less important data breaches that had happened.
+This visualization has been dubbed “World’s Biggest Data Breaches & Hacks”, but it can be improved due to its current clustering of companies and small wordings on less important data breaches that had happened. The purpose of this poster is to highlight the few most affected sectors, how the number of records stolen has increased over the years to raise awareness that every industry can be implicated by data breaches. 
 
 # Previous Visualization
 

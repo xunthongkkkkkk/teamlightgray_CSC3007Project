@@ -7,8 +7,11 @@
   title: "Paper Title",
 
   // A string of author names.
-  authors: "Author Names (separated by commas)",
-
+  authors: "Author Names",
+  
+  // A string of student IDs.
+  studentids: "2102436, 2102539, 2101104, 2101573, 2100932, 2102740, 2100590",
+  
   // Department name.
   departments: "Department Name",
 
@@ -24,7 +27,7 @@
   footer_url: "Footer URL",
 
   // Email IDs of the authors.
-  footer_email_ids: "Email IDs (separated by commas)",
+  footer_email_ids: "Team LightGray",
 
   // Color of the footer.
   footer_color: "Hex Color Code",
@@ -58,7 +61,10 @@
   title_font_size: "48",
 
   // Authors' font size (in pt).
-  authors_font_size: "36",
+  authors_font_size: "30",
+  
+    // Studentid' font size (in pt).
+  studentid_font_size: "25",
 
   // Footer's URL and email font size (in pt).
   footer_url_font_size: "30",
@@ -77,6 +83,7 @@
   univ_logo_scale = int(univ_logo_scale) * 1%
   title_font_size = int(title_font_size) * 1pt
   authors_font_size = int(authors_font_size) * 1pt
+  studentid_font_size = int(studentid_font_size) * 1pt
   num_columns = int(num_columns)
   univ_logo_column_size = int(univ_logo_column_size) * 1in
   title_column_size = int(title_column_size) * 1in
@@ -171,7 +178,8 @@
       row-gutter: 50pt,
       text(title_font_size, title + "\n\n") + 
       text(authors_font_size, emph(authors) + 
-          "   (" + departments + ") "),
+          "   " + text(studentid_font_size, emph(studentids) + " " + "\n")+ 
+          "   " + text(studentid_font_size, departments) + " "),
       image(univ_logo, width: univ_logo_scale),
     )
   )
