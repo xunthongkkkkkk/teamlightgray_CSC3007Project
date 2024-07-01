@@ -21,6 +21,8 @@ knitr:
 #| include: false
 
 library(knitr)
+purl("databreaches_prep.qmd", output = "databreaches_prep.R")
+source("databreaches_prep.R")
 ```
 
 # Introduction
@@ -76,17 +78,17 @@ The data was obtained from the "World's Biggest Data Breaches & Hacks" Google Sp
 
 The implementation utilized the Quarto publication framework, R programming language, and the following third-party packages:
 
--   **readcsv** for data import
+-   **readr** for data import
 
--   **tidyverse** for data transformation, including **dplyr** for data cleaning, grouping, and summarization
-
--   **ggplot2** for powerful visualization customization options based on graphic grammar
+-   **tidyverse** for data transformation, including **dplyr** for data cleaning, grouping, and summarization, and **ggplot2** for powerful visualization customization options based on graphic grammar
 
 -   **scales** for adjusting the axis scales
 
 -   **ggrepel** for improved text labelling
 
 -   **knitr** for dynamic document generation
+
+-   **gridExtra** for arranging multiple plots
 
 # Improved Visualization
 
@@ -106,98 +108,12 @@ The implementation utilized the Quarto publication framework, R programming lang
 #| echo: FALSE
 #| warning: FALSE
 
-
 # Load required libraries
 library(ggplot2)
-library(dplyr)
 library(ggrepel)
 library(scales)
-library(tidyverse)
 library(gridExtra)
 
-# Read the data
-data <- read.csv("IIB Data Breaches - LATEST - breaches.csv")
-
-# Group sectors into broader categories
-data <- data %>%
-  mutate(
-    sector_group = case_when(
-      grepl("web", sector, ignore.case = TRUE) ~ "Web",
-      grepl("healthcare|health", sector, ignore.case = TRUE) ~ "Healthcare",
-      grepl("app", sector, ignore.case = TRUE) ~ "App",
-      grepl("retail", sector, ignore.case = TRUE) ~ "Retail",
-      grepl("gaming", sector, ignore.case = TRUE) ~ "Gaming",
-      grepl("transport", sector, ignore.case = TRUE) ~ "Transport",
-      grepl("financial|finance", sector, ignore.case = TRUE) ~ "Financial",
-      grepl("tech", sector, ignore.case = TRUE) ~ "Tech",
-      grepl("government", sector, ignore.case = TRUE) ~ "Government",
-      grepl("telecoms", sector, ignore.case = TRUE) ~ "Telecoms",
-      grepl("legal", sector, ignore.case = TRUE) ~ "Legal",
-      grepl("media", sector, ignore.case = TRUE) ~ "Media",
-      grepl("academic", sector, ignore.case = TRUE) ~ "Academic",
-      grepl("energy", sector, ignore.case = TRUE) ~ "Energy",
-      grepl("military", sector, ignore.case = TRUE) ~ "Military",
-      TRUE ~ "Miscellaneous"
-    ),
-    records.lost = as.numeric(gsub("[^0-9]", "", records.lost)),
-    year = as.numeric(year)
-  ) %>%
-  drop_na(records.lost, year, sector_group)
-
-# Filter the data based on the specified year range and minimum records lost
-start_year <- 2010
-end_year <- 2024
-data <- data %>%
-  filter(year >= start_year & year <= end_year) %>%
-  drop_na(records.lost, year, sector_group)
-
-# Calculate total records lost for each sector group and select top 10 sectors
-top_sectors <- data %>%
-  group_by(sector_group) %>%
-  summarize(total_records_lost = sum(records.lost)) %>%
-  arrange(desc(total_records_lost)) %>%
-  top_n(10, wt = total_records_lost) %>%
-  pull(sector_group)
-
-# Filter the data to include only top 10 sectors
-data <- data %>%
-  filter(sector_group %in% top_sectors)
-
-# Convert the year to a date format for plotting
-data <- data %>%
-  mutate(StartDate = as.Date(paste(year, "-01-01", sep = "")),
-         EndDate = as.Date(paste(year, "-12-31", sep = "")))
-
-# Sort the sectors by total records lost
-sector_levels <- data %>%
-  group_by(sector_group) %>%
-  summarize(total_records_lost = sum(records.lost)) %>%
-  arrange(desc(total_records_lost)) %>%
-  pull(sector_group)
-
-data <- data %>%
-  mutate(sector_group = factor(sector_group, levels = rev(sector_levels)))
-
-# Define important sectors to highlight
-highlight_sectors <- c("Web", "Financial", "App", "Transport")
-
-# Add a new column to specify color based on sector importance
-data <- data %>%
-  mutate(
-    highlight = ifelse(as.character(sector_group) %in% highlight_sectors, as.character(sector_group), "Other")
-  )
-
-# Convert sector_group to a factor and then to numeric for plotting
-data$sector_group_num <- as.numeric(factor(data$sector_group))
-
-# Calculate the total number of data breaches each year
-yearly_data <- data %>%
-  group_by(year) %>%
-  summarize(total_records_lost = sum(records.lost))
-yearly_data <- yearly_data %>%
-  filter(year < 2024)
-data <- data %>%
-  filter(year < 2024)
 # Define color palette
 color_palette <- c("Web" = "red", "Financial" = "red", "App" = "orange2", "Transport" = "orange2", "Other" = "gray")
 coeff <- max(yearly_data$total_records_lost) / length(unique(data$sector_group_num))  # Adjust this coefficient to normalize the secondary axis
