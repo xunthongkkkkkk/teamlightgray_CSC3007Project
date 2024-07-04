@@ -4,9 +4,9 @@ author: "Team Lightgray"
 format: 
   poster-typst: 
     size: "33x23" # Approximately A1
-    poster-authors: "Cham Xun Tong, Reagan Chia, Teo Shun Yao, Shermaine Peh, Pang Jing Jie, Enrique Carlos Marcelo, Garrick Low"
+    poster-authors: "Cham Xun Thong, Reagan Chia, Teo Shun Yao, Shermaine Peh, Pang Jing Jie, Enrique Carlos Marcelo, Garrick Low"
     studentids: "2102436, 2102539, 2101104, 2101573, 2100932, 2102740, 2100590"
-    departments: "Computer Science"
+    departments: "Computing Science"
     institution-logo: "./images/sit-logo.png"
     footer-text: "Information Visualization 2024"
 execute:
@@ -84,7 +84,7 @@ The implementation utilized the Quarto publication framework, R programming lang
 
 -   **scales** for adjusting the axis scales
 
--   **ggrepel** for improved text labelling
+-   **ggrepel** for improved text labeling
 
 -   **knitr** for dynamic document generation
 
