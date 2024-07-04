@@ -6,7 +6,7 @@ format:
     size: "33x23" # Approximately A1
     poster-authors: "Cham Xun Tong, Reagan Chia, Teo Shun Yao, Shermaine Peh, Pang Jing Jie, Enrique Carlos Marcelo, Garrick Low"
     studentids: "2102436, 2102539, 2101104, 2101573, 2100932, 2102740, 2100590"
-    departments: "Information and Communication Technologies"
+    departments: "Computer Science"
     institution-logo: "./images/sit-logo.png"
     footer-text: "Information Visualization 2024"
 execute:
